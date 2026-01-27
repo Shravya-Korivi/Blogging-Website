@@ -1,0 +1,130 @@
+@startuml Blog Class Diagram
+
+' Classes
+class BlogPost {
+    + id: Integer (PK)
+    + title: CharField
+    + content: TextField
+    + created_at: DateTimeField
+    + updated_at: DateTimeField
+    + author: ForeignKey(User)
+    + category: ForeignKey(Category)
+    + view_count: IntegerField
+    + total_likes: IntegerField
+    + total_comments: IntegerField
+    + tags: ManyToManyField(Tag)
+    + is_published: BooleanField
+    --
+    + get_absolute_url(): str
+    + increment_view_count(): void
+    + update_likes_count(): void
+    + update_comments_count(): void
+    + get_related_posts(): QuerySet
+    + get_tags(): QuerySet
+    + get_comments(): QuerySet
+}
+
+class Category {
+    + id: Integer (PK)
+    + name: CharField
+    + description: TextField
+    + created_at: DateTimeField
+    --
+    + get_absolute_url(): str
+    + get_post_count(): int
+    + get_posts(): QuerySet
+}
+
+class Tag {
+    + id: Integer (PK)
+    + name: CharField
+    + created_at: DateTimeField
+    --
+    + get_absolute_url(): str
+    + get_post_count(): int
+    + get_posts(): QuerySet
+}
+
+class Comment {
+    + id: Integer (PK)
+    + post: ForeignKey(BlogPost)
+    + author: ForeignKey(User)
+    + content: TextField
+    + created_at: DateTimeField
+    + updated_at: DateTimeField
+    + is_approved: BooleanField
+    --
+    + approve(): void
+    + get_author_name(): str
+    + get_formatted_date(): str
+}
+
+class Like {
+    + id: Integer (PK)
+    + post: ForeignKey(BlogPost)
+    + user: ForeignKey(User)
+    + created_at: DateTimeField
+    --
+    + toggle_like(): bool
+    + is_liked(): bool
+}
+
+class Profile {
+    + id: Integer (PK)
+    + user: OneToOneField(User)
+    + bio: TextField
+    + profile_picture: ImageField
+    + created_at: DateTimeField
+    + updated_at: DateTimeField
+    --
+    + get_absolute_url(): str
+    + get_post_count(): int
+    + get_comment_count(): int
+    + get_like_count(): int
+    + get_posts(): QuerySet
+    + get_comments(): QuerySet
+    + update_profile_picture(): void
+}
+
+class User {
+    + id: Integer (PK)
+    + username: CharField
+    + email: EmailField
+    + password: CharField
+    + is_staff: BooleanField
+    + is_active: BooleanField
+    + date_joined: DateTimeField
+    --
+    + get_full_name(): str
+    + get_short_name(): str
+    + has_perm(): bool
+    + has_module_perms(): bool
+    + get_profile(): Profile
+    + get_posts(): QuerySet
+    + get_comments(): QuerySet
+    + get_likes(): QuerySet
+}
+
+' Relationships
+BlogPost "1" -- "0..*" Comment : receives >
+BlogPost "1" -- "0..*" Like : accumulates >
+BlogPost "1" -- "0..*" Tag : labeled with >
+BlogPost "1" -- "1" Category : categorized under >
+BlogPost "1" -- "1" User : created by >
+
+User "1" -- "1" Profile : described by >
+User "1" -- "0..*" Comment : writes >
+User "1" -- "0..*" Like : gives >
+
+' Notes
+note right of BlogPost
+  A blog post can have multiple
+  comments, likes, and tags
+end note
+
+note right of User
+  A user can write multiple
+  comments and give multiple likes
+end note
+
+@enduml 

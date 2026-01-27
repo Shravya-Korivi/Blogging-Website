@@ -1,0 +1,85 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }}'s Profile | Blog Site{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Info -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <img src="{{ profile_user.profile.profile_pic.url }}" alt="{{ profile_user.username }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                <h3 class="mb-1">{{ profile_user.username }}</h3>
+                {% if profile_user.profile.bio %}
+                    <p class="text-muted mb-3">{{ profile_user.profile.bio }}</p>
+                {% endif %}
+                
+                {% if user.is_authenticated and user != profile_user %}
+                    <div class="mb-3">
+                        {% if is_following %}
+                            <a href="{% url 'unfollow_user' username=profile_user.username %}" class="btn btn-outline-danger">
+                                <i class="fas fa-user-minus me-1"></i> Unfollow
+                            </a>
+                        {% else %}
+                            <a href="{% url 'follow_user' username=profile_user.username %}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-1"></i> Follow
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-center gap-4">
+                    <div class="text-center">
+                        <h5 class="mb-0">{{ followers.count }}</h5>
+                        <small class="text-muted">Followers</small>
+                    </div>
+                    <div class="text-center">
+                        <h5 class="mb-0">{{ following.count }}</h5>
+                        <small class="text-muted">Following</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User's Posts -->
+    <div class="col-lg-8">
+        <h3 class="mb-4">Posts</h3>
+        
+        {% if posts %}
+            {% for post in posts %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <a href="{% url 'post_detail' pk=post.pk %}" class="text-decoration-none">{{ post.title }}</a>
+                        </h4>
+                        <div class="text-muted small mb-2">
+                            <i class="fas fa-calendar me-1"></i> {{ post.created_at|date:"F d, Y" }}
+                            {% if post.category %}
+                                <span class="mx-1">|</span>
+                                <i class="fas fa-folder me-1"></i> <a href="{% url 'category_posts' name=post.category.name %}">{{ post.category.name }}</a>
+                            {% endif %}
+                        </div>
+                        <div class="card-text mb-3">
+                            {{ post.content|safe|truncatewords_html:50 }}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="post-stats text-muted small">
+                                <span class="me-3"><i class="fas fa-eye me-1"></i> {{ post.view_count }}</span>
+                                <span class="me-3"><i class="fas fa-thumbs-up me-1"></i> {{ post.total_likes }}</span>
+                                <span><i class="fas fa-comment me-1"></i> {{ post.total_comments }}</span>
+                            </div>
+                            <a href="{% url 'post_detail' pk=post.pk %}" class="btn btn-primary btn-sm">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> No posts yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

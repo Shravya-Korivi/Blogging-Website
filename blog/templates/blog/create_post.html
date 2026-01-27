@@ -1,0 +1,156 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create New Post | Blog Site{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Create New Post</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Title and Content -->
+                    {{ form.title|as_crispy_field }}
+                    {{ form.content|as_crispy_field }}
+                    
+                    <!-- Category -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="id_tags">Tags</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createTagModal">
+                                    <i class="fas fa-plus"></i> Add New Tag
+                                </button>
+                            </div>
+                            {{ form.tags|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Create Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Tag Modal -->
+<div class="modal fade" id="createTagModal" tabindex="-1" aria-labelledby="createTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createTagModalLabel">Create New Tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="tag-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="tag-name" class="form-label">Tag Name</label>
+                        <input type="text" class="form-control" id="tag-name" name="name" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="create-tag-btn">Create Tag</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for tags
+    $('#id_tags').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select or type to search tags',
+        allowClear: true,
+        tags: true,
+        ajax: {
+            url: "{% url 'get_tags' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    query: params.term
+                };
+            },
+            processResults: function(data) {
+                return {
+                    results: data.map(function(item) {
+                        return {
+                            id: item.id,
+                            text: item.name
+                        };
+                    })
+                };
+            },
+            cache: true
+        }
+    });
+
+    // Handle tag creation
+    $('#create-tag-btn').click(function() {
+        var tagName = $('#tag-name').val();
+        if (tagName) {
+            $.ajax({
+                url: "{% url 'create_tag' %}",
+                type: "POST",
+                data: {
+                    'name': tagName,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                },
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Add the new tag to the select field
+                        var newOption = new Option(response.tag_name, response.tag_id, true, true);
+                        $('#id_tags').append(newOption).trigger('change');
+                        
+                        // Show success message and close modal
+                        toastr.success('Tag created successfully!');
+                        $('#createTagModal').modal('hide');
+                        $('#tag-name').val('');
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 400) {
+                        var errors = xhr.responseJSON.errors;
+                        Object.keys(errors).forEach(function(key) {
+                            toastr.error(errors[key][0]);
+                        });
+                    } else {
+                        toastr.error('An error occurred. Please try again.');
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 

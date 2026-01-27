@@ -1,0 +1,121 @@
+@startuml Blog Sequence Diagram
+
+actor User
+actor Admin
+participant "BlogPost" as Post
+participant "Comment" as Comment
+participant "Like" as Like
+participant "Category" as Category
+participant "Tag" as Tag
+participant "ModerationQueue" as Queue
+
+' Create Blog Post
+User -> Post: create(title, content, category)
+activate Post
+Post -> Category: validate category
+Category --> Post: category valid
+Post -> Tag: add tags
+Tag --> Post: tags added
+Post -> Queue: add_to_moderation()
+activate Queue
+Queue --> Post: post queued
+Post --> User: post submitted for review
+deactivate Queue
+deactivate Post
+
+' Admin Review Post
+Admin -> Queue: get_pending_posts()
+activate Queue
+Queue --> Admin: list of pending posts
+deactivate Queue
+
+Admin -> Post: review_content()
+activate Post
+Post --> Admin: display post content
+Admin -> Post: check_content_standards()
+activate Post
+Post --> Admin: content analysis
+deactivate Post
+
+alt content meets standards
+    Admin -> Post: approve()
+    activate Post
+    Post -> Post: set_is_published(True)
+    Post -> Queue: remove_from_moderation()
+    activate Queue
+    Queue --> Post: post removed
+    deactivate Queue
+    Post --> Admin: post approved
+    deactivate Post
+else content violates standards
+    Admin -> Post: reject(reason)
+    activate Post
+    Post -> Queue: remove_from_moderation()
+    activate Queue
+    Queue --> Post: post removed
+    deactivate Queue
+    Post -> User: notify_rejection(reason)
+    Post --> Admin: post rejected
+    deactivate Post
+end
+
+' View Blog Post
+User -> Post: view()
+activate Post
+Post -> Post: increment_view_count()
+Post --> User: display post content
+deactivate Post
+
+' Add Comment
+User -> Post: add_comment(content)
+activate Post
+Post -> Comment: create(content, author)
+activate Comment
+Comment --> Post: comment created
+Post -> Post: update_comments_count()
+Post --> User: comment added
+deactivate Comment
+deactivate Post
+
+' Like Post
+User -> Post: like()
+activate Post
+Post -> Like: create(user, post)
+activate Like
+Like --> Post: like created
+Post -> Post: update_likes_count()
+Post --> User: like added
+deactivate Like
+deactivate Post
+
+' Delete Post
+alt User deletes own post
+    User -> Post: delete()
+    activate Post
+    Post -> Comment: delete_all_comments()
+    activate Comment
+    Comment --> Post: comments deleted
+    deactivate Comment
+    Post -> Like: delete_all_likes()
+    activate Like
+    Like --> Post: likes deleted
+    deactivate Like
+    Post --> User: post deleted
+    deactivate Post
+else Admin deletes post
+    Admin -> Post: delete(reason)
+    activate Post
+    Post -> Comment: delete_all_comments()
+    activate Comment
+    Comment --> Post: comments deleted
+    deactivate Comment
+    Post -> Like: delete_all_likes()
+    activate Like
+    Like --> Post: likes deleted
+    deactivate Like
+    Post -> User: notify_deletion(reason)
+    Post --> Admin: post deleted
+    deactivate Post
+end
+
+@enduml 

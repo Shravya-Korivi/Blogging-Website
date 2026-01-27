@@ -1,0 +1,150 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}Admin Panel | Blog Site{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Admin Panel</h1>
+        <p class="text-muted">Welcome to the admin panel, {{ user.username }}.</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center admin-card">
+                <div class="admin-card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="admin-card-title">Total Users</div>
+                <div class="admin-card-count">{{ total_users }}</div>
+                <a href="{% url 'admin_users' %}" class="btn btn-primary">Manage Users</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center admin-card">
+                <div class="admin-card-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="admin-card-title">Total Posts</div>
+                <div class="admin-card-count">{{ total_posts }}</div>
+                <a href="{% url 'admin_posts' %}" class="btn btn-primary">Manage Posts</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center admin-card">
+                <div class="admin-card-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="admin-card-title">Total Comments</div>
+                <div class="admin-card-count">{{ total_comments }}</div>
+                <a href="{% url 'admin_comments' %}" class="btn btn-primary">Manage Comments</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <!-- Recent Users -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Users</h5>
+                <a href="{% url 'admin_users' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_users %}
+                    <ul class="list-group list-group-flush">
+                        {% for user_obj in recent_users %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{% url 'user_profile' username=user_obj.username %}">{{ user_obj.username }}</a>
+                                    <small class="d-block text-muted">{{ user_obj.date_joined|date:"M d, Y" }}</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ user_obj.blog_posts.count }} posts</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No users yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Posts -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Posts</h5>
+                <a href="{% url 'admin_posts' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_posts %}
+                    <ul class="list-group list-group-flush">
+                        {% for post in recent_posts %}
+                            <li class="list-group-item">
+                                <a href="{% url 'post_detail' pk=post.id %}">{{ post.title }}</a>
+                                <small class="d-block text-muted">
+                                    By {{ post.author.username }} on {{ post.created_at|date:"M d, Y" }}
+                                </small>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye me-1"></i> {{ post.view_count }}
+                                        <i class="fas fa-thumbs-up ms-2 me-1"></i> {{ post.total_likes }}
+                                        <i class="fas fa-comment ms-2 me-1"></i> {{ post.total_comments }}
+                                    </small>
+                                    <span class="badge {% if post.status == 'published' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ post.status }}
+                                    </span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No posts yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Comments -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Comments</h5>
+                <a href="{% url 'admin_comments' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_comments %}
+                    <ul class="list-group list-group-flush">
+                        {% for comment in recent_comments %}
+                            <li class="list-group-item">
+                                <a href="{% url 'post_detail' pk=comment.post.id %}#comment-{{ comment.id }}">
+                                    "{{ comment.content|truncatechars:40 }}"
+                                </a>
+                                <small class="d-block text-muted">
+                                    By {{ comment.author.username }} on {{ comment.created_at|date:"M d, Y" }}
+                                </small>
+                                <small class="d-block text-muted">
+                                    On post: <a href="{% url 'post_detail' pk=comment.post.id %}">{{ comment.post.title }}</a>
+                                </small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No comments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

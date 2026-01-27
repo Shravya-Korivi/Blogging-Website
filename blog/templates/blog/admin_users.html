@@ -1,0 +1,177 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}Manage Users | Admin Panel{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Manage Users</li>
+            </ol>
+        </nav>
+        <h1>Manage Users</h1>
+        <p class="text-muted">View and manage user accounts.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Users</h5>
+                <form class="d-flex" method="GET">
+                    <input class="form-control me-2" type="search" name="search" placeholder="Search users..." aria-label="Search" value="{{ request.GET.search|default:'' }}">
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                </form>
+            </div>
+            <div class="card-body">
+                {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Date Joined</th>
+                                    <th>Status</th>
+                                    <th>Posts</th>
+                                    <th>Comments</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user_obj in page_obj %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'user_profile' username=user_obj.username %}">{{ user_obj.username }}</a>
+                                        </td>
+                                        <td>{{ user_obj.email }}</td>
+                                        <td>{{ user_obj.date_joined|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if user_obj.is_superuser %}
+                                                <span class="badge bg-danger">Admin</span>
+                                            {% elif user_obj.is_staff %}
+                                                <span class="badge bg-warning text-dark">Staff</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Regular</span>
+                                            {% endif %}
+                                            
+                                            {% if user_obj.is_active %}
+                                                <span class="badge bg-info">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user_obj.blog_posts.count }}</td>
+                                        <td>{{ user_obj.user_comments.count }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'user_profile' username=user_obj.username %}" class="btn btn-outline-primary" title="View Profile" target="_blank">
+                                                    <i class="fas fa-user"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-warning" title="Toggle Status" onclick="confirmToggleStatus('{{ user_obj.id }}', '{{ user_obj.is_active }}')">
+                                                    {% if user_obj.is_active %}
+                                                        <i class="fas fa-ban"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-check"></i>
+                                                    {% endif %}
+                                                </button>
+                                            </div>
+                                            <form id="toggle-status-form-{{ user_obj.id }}" action="{% url 'toggle_user_status' user_obj.id %}" method="POST" style="display: none;">
+                                                {% csrf_token %}
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="alert alert-info">No users found.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmToggleStatus(userId, isActive) {
+        let message = isActive === 'True' ? 
+            'Are you sure you want to deactivate this user?' : 
+            'Are you sure you want to activate this user?';
+        
+        if (confirm(message)) {
+            document.getElementById('toggle-status-form-' + userId).submit();
+        }
+    }
+</script>
+{% endblock %} 

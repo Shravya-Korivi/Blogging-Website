@@ -1,0 +1,66 @@
+@startuml Blog Activity Diagram
+
+start
+
+:User visits site;
+
+if (User logged in?) then (no)
+    :User clicks Register;
+    :Fill registration form;
+    if (Form valid?) then (yes)
+        :Create User account;
+        :Create Profile;
+        :Send confirmation email;
+        :User logs in;
+    else (no)
+        :Show validation errors;
+        stop
+    endif
+else (yes)
+endif
+
+:User navigates to dashboard;
+
+if (Create new post?) then (yes)
+    :Click "New Post";
+    :Fill post form;
+    if (Form valid?) then (yes)
+        :Select category;
+        :Add tags;
+        if (Add images?) then (yes)
+            :Upload images;
+        else (no)
+        endif
+        :Save post;
+        if (Publish now?) then (yes)
+            :Set is_published = True;
+        else (no)
+            :Save as draft;
+        endif
+        :Show success message;
+    else (no)
+        :Show validation errors;
+        stop
+    endif
+else (no)
+    :Browse existing posts;
+    if (View post?) then (yes)
+        :Increment view count;
+        if (Like post?) then (yes)
+            :Add like;
+            :Update likes count;
+        else (no)
+        endif
+        if (Add comment?) then (yes)
+            :Write comment;
+            :Save comment;
+            :Update comments count;
+        else (no)
+        endif
+    else (no)
+    endif
+endif
+
+stop
+
+@enduml 

@@ -1,0 +1,105 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}My Drafts | Blog Site{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <h1 class="mb-4">My Drafts</h1>
+        
+        {% if drafts %}
+            {% for draft in drafts %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">{{ draft.title }}</h2>
+                        <div class="text-muted small mb-2">
+                            <i class="fas fa-calendar me-1"></i> Created: {{ draft.created_at|date:"F d, Y" }}
+                            <span class="mx-1">|</span>
+                            <i class="fas fa-clock me-1"></i> Last updated: {{ draft.updated_at|date:"F d, Y" }}
+                        </div>
+                        <div class="card-text mb-3">
+                            {{ draft.content|safe|truncatewords_html:50 }}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'edit_post' pk=draft.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </a>
+                            <form method="POST" action="{% url 'delete_post' pk=draft.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash me-1"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> You don't have any drafts yet.
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">About Drafts</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Drafts are posts that you've started but haven't published yet. Only you can see your drafts.</p>
+                <a href="{% url 'create_post' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Create New Post
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
