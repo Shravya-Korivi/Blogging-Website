@@ -1,6 +1,6 @@
 # Blogging Website
 
-A fully-featured blogging platform built with Django, Python, HTML, CSS, JavaScript, and MySQL.
+A fully-featured blogging platform built with Django, Python, HTML, CSS, JavaScript, and MySQL. 
 
 ## Features
 
@@ -82,6 +82,8 @@ A fully-featured blogging platform built with Django, Python, HTML, CSS, JavaScr
 
 9. Visit `http://127.0.0.1:8000/` in your browser to access the site
 
+    (You can see the demo.pdf file to see how the website looks)
+
 ## Project Structure
 
 - **blog/** - Main application
@@ -122,13 +124,4 @@ A fully-featured blogging platform built with Django, Python, HTML, CSS, JavaScr
 2. Click the "Follow" button to follow the user
 3. You can view the users you follow and your followers on your profile page
 
-## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgements
-
-- [Django](https://www.djangoproject.com/)
-- [Bootstrap](https://getbootstrap.com/)
-- [CKEditor](https://ckeditor.com/)
-- [Font Awesome](https://fontawesome.com/) 
